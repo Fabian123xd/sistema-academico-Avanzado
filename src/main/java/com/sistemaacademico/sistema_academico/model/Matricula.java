@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "matriculas")
+@Table(name = "matriculas", uniqueConstraints = @UniqueConstraint(columnNames = {"estudiante_id", "curso_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,15 +18,15 @@ public class Matricula {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "alumno_id")
-    private Alumno alumno;
+    @JoinColumn(name = "estudiante_id")
+    private Estudiante estudiante;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "curso_id")
     private Curso curso;
 
-    private LocalDate fechaMatricula;
+    private LocalDate fechaMatricula = LocalDate.now();
 
-    private String estado; // e.g., INSCRITO, RETIRADO, COMPLETADO
-
+    @Enumerated(EnumType.STRING)
+    private EstadoMatricula estado = EstadoMatricula.INSCRITO;
 }
