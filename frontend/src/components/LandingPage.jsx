@@ -136,11 +136,23 @@ export default function LandingPage() {
     return () => document.removeEventListener('mousedown', fn)
   }, [])
 
-  // Auto-slide del hero cada 4 segundos
+  // Auto-slide del hero cada 4.5 segundos con fotos reales de personas
   const HERO_SLIDES = [
-    { titulo: 'Metodología centrada\nen el estudiante', subtitulo: 'Todas las actividades están pensadas para contribuir al desarrollo intelectual y socioemocional de nuestros alumnos.', img: heroImg },
-    { titulo: 'Excelencia académica\ndesde el primer día', subtitulo: 'Formamos líderes del mañana con una educación de calidad, valores y tecnología de vanguardia.', img: heroImg },
-    { titulo: 'Un espacio seguro\npara crecer y aprender', subtitulo: 'Nuestros docentes altamente capacitados guían a cada estudiante en su camino hacia el éxito.', img: heroImg },
+    { 
+      titulo: 'Metodología centrada\nen el estudiante', 
+      subtitulo: 'Todas las actividades están pensadas para contribuir al desarrollo intelectual y socioemocional de nuestros alumnos.', 
+      img: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80' 
+    },
+    { 
+      titulo: 'Excelencia académica\ndesde el primer día', 
+      subtitulo: 'Formamos líderes del mañana con una educación de calidad, valores y tecnología de vanguardia.', 
+      img: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1600&q=80' 
+    },
+    { 
+      titulo: 'Un espacio seguro\npara crecer y aprender', 
+      subtitulo: 'Nuestros docentes altamente capacitados guían a cada estudiante en su camino hacia el éxito.', 
+      img: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80' 
+    },
   ]
   useEffect(() => {
     const t = setInterval(() => setHeroSlide(s => (s + 1) % HERO_SLIDES.length), 4500)
@@ -220,7 +232,12 @@ export default function LandingPage() {
       {/* ── HERO / SLIDER ────────────────────────────── */}
       <section className="pc-hero">
         <div className="pc-hero-overlay"/>
-        <img src={heroImg} alt="Estudiantes PenCollege" className="pc-hero-bg"/>
+        <img 
+          src={HERO_SLIDES[heroSlide].img} 
+          alt="Estudiantes PenCollege" 
+          className="pc-hero-bg"
+          key={heroSlide}
+        />
         <div className="pc-hero-content">
           <div className="pc-hero-text">
             <h1 className="pc-hero-title" key={heroSlide}>

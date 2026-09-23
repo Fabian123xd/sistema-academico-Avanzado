@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    AcademiaPro â€” Sistema de DiseÃ±o
    Tema CLARO por defecto Â· Modo oscuro con clase .dark-mode
    ============================================================ */
@@ -244,6 +244,11 @@ body {
 .pc-hero-bg {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: center top;
+  animation: heroFadeIn 0.8s ease-in-out;
+}
+@keyframes heroFadeIn {
+  from { opacity: 0.4; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
 }
 .pc-hero-overlay {
   position: absolute; inset: 0; z-index: 1;
