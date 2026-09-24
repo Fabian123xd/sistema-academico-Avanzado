@@ -136,11 +136,23 @@ export default function LandingPage() {
     return () => document.removeEventListener('mousedown', fn)
   }, [])
 
-  // Auto-slide del hero cada 4 segundos
+  // Auto-slide del hero cada 4.5 segundos con fotos reales de personas
   const HERO_SLIDES = [
-    { titulo: 'Metodología centrada\nen el estudiante', subtitulo: 'Todas las actividades están pensadas para contribuir al desarrollo intelectual y socioemocional de nuestros alumnos.', img: heroImg },
-    { titulo: 'Excelencia académica\ndesde el primer día', subtitulo: 'Formamos líderes del mañana con una educación de calidad, valores y tecnología de vanguardia.', img: heroImg },
-    { titulo: 'Un espacio seguro\npara crecer y aprender', subtitulo: 'Nuestros docentes altamente capacitados guían a cada estudiante en su camino hacia el éxito.', img: heroImg },
+    { 
+      titulo: 'Metodología centrada\nen el estudiante', 
+      subtitulo: 'Todas las actividades están pensadas para contribuir al desarrollo intelectual y socioemocional de nuestros alumnos.', 
+      img: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80' 
+    },
+    { 
+      titulo: 'Excelencia académica\ndesde el primer día', 
+      subtitulo: 'Formamos líderes del mañana con una educación de calidad, valores y tecnología de vanguardia.', 
+      img: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1600&q=80' 
+    },
+    { 
+      titulo: 'Un espacio seguro\npara crecer y aprender', 
+      subtitulo: 'Nuestros docentes altamente capacitados guían a cada estudiante en su camino hacia el éxito.', 
+      img: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80' 
+    },
   ]
   useEffect(() => {
     const t = setInterval(() => setHeroSlide(s => (s + 1) % HERO_SLIDES.length), 4500)
@@ -206,13 +218,11 @@ export default function LandingPage() {
               )}
             </div>
           ) : (
-            <div className="pc-login-icon-wrap">
-              <button id="lp-login-icon-btn" className="pc-login-icon-btn" onClick={() => setShowLogin(true)}
-                title="Iniciar sesión" aria-label="Acceso al aula virtual">
-                <FiUser size={19}/>
-              </button>
-              <span className="pc-login-icon-lbl">Iniciar sesión</span>
-            </div>
+            <button id="lp-login-icon-btn" className="pc-login-btn" onClick={() => setShowLogin(true)}
+              title="Iniciar sesión" aria-label="Acceso al aula virtual">
+              <FiUser size={16}/>
+              <span>Iniciar sesión</span>
+            </button>
           )}
         </div>
       </nav>
@@ -220,7 +230,12 @@ export default function LandingPage() {
       {/* ── HERO / SLIDER ────────────────────────────── */}
       <section className="pc-hero">
         <div className="pc-hero-overlay"/>
-        <img src={heroImg} alt="Estudiantes PenCollege" className="pc-hero-bg"/>
+        <img 
+          src={HERO_SLIDES[heroSlide].img} 
+          alt="Estudiantes PenCollege" 
+          className="pc-hero-bg"
+          key={heroSlide}
+        />
         <div className="pc-hero-content">
           <div className="pc-hero-text">
             <h1 className="pc-hero-title" key={heroSlide}>
@@ -254,9 +269,9 @@ export default function LandingPage() {
           </p>
           <div className="pc-niveles-grid">
             {[
-              { img: inicialImg,    label: 'INICIAL',    color: '#f59e0b', shadow: 'rgba(245,158,11,0.4)'  },
-              { img: primariaImg,   label: 'PRIMARIA',   color: '#22c55e', shadow: 'rgba(34,197,94,0.4)'   },
-              { img: secundariaImg, label: 'SECUNDARIA', color: '#3b82f6', shadow: 'rgba(59,130,246,0.4)'  },
+              { img: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80', label: 'INICIAL',    color: '#f59e0b', shadow: 'rgba(245,158,11,0.4)'  },
+              { img: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80', label: 'PRIMARIA',   color: '#22c55e', shadow: 'rgba(34,197,94,0.4)'   },
+              { img: 'https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=800&q=80', label: 'SECUNDARIA', color: '#3b82f6', shadow: 'rgba(59,130,246,0.4)'  },
             ].map(({img, label, color, shadow}) => (
               <div key={label} className="pc-nivel-card" style={{'--nivel-color': color, '--nivel-shadow': shadow}}>
                 <div className="pc-nivel-img-wrap">
@@ -297,7 +312,7 @@ export default function LandingPage() {
       <section className="pc-section pc-propuesta" id="admision">
         <div className="pc-section-inner pc-propuesta-inner">
           <div className="pc-propuesta-img-col">
-            <img src={inicialImg} alt="Propuesta educativa PenCollege" className="pc-propuesta-img"/>
+            <img src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=800&q=80" alt="Propuesta educativa PenCollege" className="pc-propuesta-img"/>
           </div>
           <div className="pc-propuesta-text-col">
             <div className="pc-section-badge-sm">¿Por qué elegirnos?</div>
