@@ -218,13 +218,11 @@ export default function LandingPage() {
               )}
             </div>
           ) : (
-            <div className="pc-login-icon-wrap">
-              <button id="lp-login-icon-btn" className="pc-login-icon-btn" onClick={() => setShowLogin(true)}
-                title="Iniciar sesión" aria-label="Acceso al aula virtual">
-                <FiUser size={19}/>
-              </button>
-              <span className="pc-login-icon-lbl">Iniciar sesión</span>
-            </div>
+            <button id="lp-login-icon-btn" className="pc-login-btn" onClick={() => setShowLogin(true)}
+              title="Iniciar sesión" aria-label="Acceso al aula virtual">
+              <FiUser size={16}/>
+              <span>Iniciar sesión</span>
+            </button>
           )}
         </div>
       </nav>
@@ -271,9 +269,9 @@ export default function LandingPage() {
           </p>
           <div className="pc-niveles-grid">
             {[
-              { img: inicialImg,    label: 'INICIAL',    color: '#f59e0b', shadow: 'rgba(245,158,11,0.4)'  },
-              { img: primariaImg,   label: 'PRIMARIA',   color: '#22c55e', shadow: 'rgba(34,197,94,0.4)'   },
-              { img: secundariaImg, label: 'SECUNDARIA', color: '#3b82f6', shadow: 'rgba(59,130,246,0.4)'  },
+              { img: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80', label: 'INICIAL',    color: '#f59e0b', shadow: 'rgba(245,158,11,0.4)'  },
+              { img: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80', label: 'PRIMARIA',   color: '#22c55e', shadow: 'rgba(34,197,94,0.4)'   },
+              { img: 'https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=800&q=80', label: 'SECUNDARIA', color: '#3b82f6', shadow: 'rgba(59,130,246,0.4)'  },
             ].map(({img, label, color, shadow}) => (
               <div key={label} className="pc-nivel-card" style={{'--nivel-color': color, '--nivel-shadow': shadow}}>
                 <div className="pc-nivel-img-wrap">
@@ -314,7 +312,7 @@ export default function LandingPage() {
       <section className="pc-section pc-propuesta" id="admision">
         <div className="pc-section-inner pc-propuesta-inner">
           <div className="pc-propuesta-img-col">
-            <img src={inicialImg} alt="Propuesta educativa PenCollege" className="pc-propuesta-img"/>
+            <img src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=800&q=80" alt="Propuesta educativa PenCollege" className="pc-propuesta-img"/>
           </div>
           <div className="pc-propuesta-text-col">
             <div className="pc-section-badge-sm">¿Por qué elegirnos?</div>
