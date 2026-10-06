@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    AcademiaPro â€” Sistema de DiseÃ±o
    Tema CLARO por defecto Â· Modo oscuro con clase .dark-mode
    ============================================================ */
@@ -186,20 +186,18 @@ body {
 .pc-nav-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
 /* Ãcono circular de login */
-.pc-login-icon-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
-.pc-login-icon-btn {
-  width: 44px; height: 44px; border-radius: 50%;
+.pc-login-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 50px;
   background: linear-gradient(135deg, #1565C0, #E91E63);
-  border: none; color: #fff; font-size: 1.1rem;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 3px 12px rgba(21,101,192,0.35);
-  transition: transform var(--t-fast), box-shadow var(--t-fast);
+  border: none; color: #ffffff; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 3px 12px rgba(21,101,192,0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
-.pc-login-icon-btn:hover { transform: scale(1.08); box-shadow: 0 5px 20px rgba(21,101,192,0.45); }
-.pc-login-icon-lbl {
-  position: absolute; top: calc(100% + 4px);
-  font-size: 0.65rem; font-weight: 600; color: var(--text-muted);
-  white-space: nowrap; pointer-events: none;
+.pc-login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 18px rgba(21,101,192,0.45);
 }
 
 /* Avatar (usuario logueado) */
@@ -244,6 +242,11 @@ body {
 .pc-hero-bg {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: center top;
+  animation: heroFadeIn 0.8s ease-in-out;
+}
+@keyframes heroFadeIn {
+  from { opacity: 0.4; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
 }
 .pc-hero-overlay {
   position: absolute; inset: 0; z-index: 1;
