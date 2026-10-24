@@ -30,3 +30,4 @@ npm run build
 mvn spring-boot:run
 # abrir http://localhost:8082
 
+¡Bienvenidos a nuestro proyecto!
