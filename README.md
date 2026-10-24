@@ -29,4 +29,3 @@ npm run build
 # luego (desde la raíz) ejecutar backend
 mvn spring-boot:run
 # abrir http://localhost:8082
-
