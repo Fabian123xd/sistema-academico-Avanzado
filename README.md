@@ -30,3 +30,8 @@ npm run build
 mvn spring-boot:run
 # abrir http://localhost:8082
 
+## Versión actual
+
+La versión actual del proyecto es **v0.1.0**, correspondiente a la primera versión funcional del Sistema Académico Avanzado.
+
+La versión incluye gestión de alumnos, cursos y matrículas, frontend con React, backend con Spring Boot y conexión con MySQL.
