@@ -2,7 +2,7 @@ name: CI - Integración Continua
 
 on:
   push:
-    branches: [main, Marck-Avance]
+    branches: [main, Marck-Avance, "apf3/ci"]
   pull_request:
     branches: [main, Marck-Avance]
   workflow_dispatch:
