@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Card, Table, Form, Button, Row, Col, Alert, Badge, Tabs, Tab, Modal } from 'react-bootstrap'
 import adminService from '../../services/adminService'
 
-const CURSO_VACIO = { codigo: '', nombre: '', creditos: '', docenteId: '', periodoId: '', carreraId: '', ciclo: '1', tipo: 'OBLIGATORIO' }
+const CURSO_VACIO = { codigo: '', nombre: '', creditos: '', docenteId: '', periodoId: '', carreraId: '', ciclo: '1', tipo: 'OBLIGATORIO', capacidadMaxima: 30 }
 const PERIODO_VACIO = { nombre: '', fechaInicio: '', fechaFin: '' }
 const CARRERA_VACIO = { codigo: '', nombre: '', descripcion: '', duracionCiclos: 10 }
 
@@ -119,7 +119,8 @@ export default function AdminCursos() {
         periodoId: cursoForm.periodoId || null,
         carreraId: cursoForm.carreraId ? Number(cursoForm.carreraId) : null,
         ciclo: Number(cursoForm.ciclo || 1),
-        tipo: cursoForm.tipo || 'OBLIGATORIO'
+        tipo: cursoForm.tipo || 'OBLIGATORIO',
+        capacidadMaxima: Number(cursoForm.capacidadMaxima || 30)
       })
       setCursoForm(CURSO_VACIO)
       setMensaje('Curso creado correctamente en la malla curricular.')
@@ -235,18 +236,22 @@ export default function AdminCursos() {
                     <option value="ELECTIVO">Electivo</option>
                   </Form.Select>
                 </Col>
-                <Col md={4}>
+                <Col md={3}>
                   <Form.Label>Créditos</Form.Label>
                   <Form.Control type="number" min="1" max="10" value={cursoForm.creditos} onChange={(e) => setCursoForm({ ...cursoForm, creditos: e.target.value })} />
                 </Col>
-                <Col md={4}>
+                <Col md={3}>
+                  <Form.Label>Cupo Máx.</Form.Label>
+                  <Form.Control type="number" min="1" max="200" value={cursoForm.capacidadMaxima} onChange={(e) => setCursoForm({ ...cursoForm, capacidadMaxima: e.target.value })} />
+                </Col>
+                <Col md={3}>
                   <Form.Label>Docente</Form.Label>
                   <Form.Select value={cursoForm.docenteId} onChange={(e) => setCursoForm({ ...cursoForm, docenteId: e.target.value })}>
                     <option value="">Sin asignar</option>
                     {docentes.map((d) => <option key={d.id} value={d.id}>{d.nombres} {d.apellidos}</option>)}
                   </Form.Select>
                 </Col>
-                <Col md={4}>
+                <Col md={3}>
                   <Form.Label>Periodo</Form.Label>
                   <Form.Select value={cursoForm.periodoId} onChange={(e) => setCursoForm({ ...cursoForm, periodoId: e.target.value })}>
                     <option value="">Sin asignar</option>
@@ -293,6 +298,7 @@ export default function AdminCursos() {
               <th>Ciclo</th>
               <th>Tipo</th>
               <th>Créditos</th>
+              <th>Cupo</th>
               <th>Periodo</th>
               <th>Docente</th>
               <th className="text-center">Prerrequisitos</th>
@@ -311,6 +317,7 @@ export default function AdminCursos() {
                   </Badge>
                 </td>
                 <td>{c.creditos} cr.</td>
+                <td><Badge bg="light" text="dark">{c.capacidadMaxima || 30} vac.</Badge></td>
                 <td>{c.periodo?.nombre || '—'}</td>
                 <td style={{ minWidth: 200 }}>
                   <Form.Select size="sm" defaultValue={c.docente?.usuario?.id || ''} onChange={(e) => asignarDocente(c.id, e.target.value)}>

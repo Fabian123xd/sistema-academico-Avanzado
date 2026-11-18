@@ -47,6 +47,9 @@ public class Curso {
     @Column(nullable = false, length = 20)
     private TipoCurso tipo = TipoCurso.OBLIGATORIO;
 
+    @Column(name = "capacidad_maxima", nullable = false)
+    private Integer capacidadMaxima = 30;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "curso_prerrequisitos",

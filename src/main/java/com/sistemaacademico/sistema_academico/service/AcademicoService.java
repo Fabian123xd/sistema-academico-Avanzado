@@ -5,6 +5,7 @@ import com.sistemaacademico.sistema_academico.exception.ApiException;
 import com.sistemaacademico.sistema_academico.model.*;
 import com.sistemaacademico.sistema_academico.repository.*;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,11 +76,16 @@ public class AcademicoService {
     // ---- Cursos ----
     @Transactional
     public Curso crearCurso(Curso curso, Long docenteId, Long periodoId) {
-        return crearCurso(curso, docenteId, periodoId, null, 1, TipoCurso.OBLIGATORIO);
+        return crearCurso(curso, docenteId, periodoId, null, 1, TipoCurso.OBLIGATORIO, 30);
     }
 
     @Transactional
     public Curso crearCurso(Curso curso, Long docenteId, Long periodoId, Long carreraId, Integer ciclo, TipoCurso tipo) {
+        return crearCurso(curso, docenteId, periodoId, carreraId, ciclo, tipo, 30);
+    }
+
+    @Transactional
+    public Curso crearCurso(Curso curso, Long docenteId, Long periodoId, Long carreraId, Integer ciclo, TipoCurso tipo, Integer capacidadMaxima) {
         if (docenteId != null) {
             Docente docente = docenteRepository.findByUsuarioId(docenteId)
                     .orElseThrow(() -> new ApiException("Docente no encontrado", HttpStatus.NOT_FOUND));
@@ -101,6 +107,7 @@ public class AcademicoService {
         if (tipo != null) {
             curso.setTipo(tipo);
         }
+        curso.setCapacidadMaxima(capacidadMaxima != null && capacidadMaxima > 0 ? capacidadMaxima : 30);
         return cursoRepository.save(curso);
     }
  
@@ -175,6 +182,16 @@ public class AcademicoService {
             throw new ApiException("El estudiante ya esta matriculado en este curso", HttpStatus.CONFLICT);
         });
 
+        // Validar cupo máximo y vacantes disponibles
+        long inscritosActivos = matriculaRepository.countByCursoIdAndEstadoNot(curso.getId(), EstadoMatricula.RETIRADO);
+        int capacidad = curso.getCapacidadMaxima() != null ? curso.getCapacidadMaxima() : 30;
+        if (inscritosActivos >= capacidad) {
+            throw new ApiException(
+                    "No hay vacantes disponibles en este curso. Capacidad máxima alcanzada (" + inscritosActivos + "/" + capacidad + ")",
+                    HttpStatus.CONFLICT
+            );
+        }
+
         // Validar cumplimiento de prerrequisitos
         validarPrerrequisitos(estudiante.getId(), curso);
 
@@ -183,6 +200,24 @@ public class AcademicoService {
         matricula.setCurso(curso);
         matricula.setEstado(EstadoMatricula.INSCRITO);
         return matriculaRepository.save(matricula);
+    }
+
+    public Map<String, Object> obtenerVacantes(Long cursoId) {
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new ApiException("Curso no encontrado", HttpStatus.NOT_FOUND));
+        long inscritos = matriculaRepository.countByCursoIdAndEstadoNot(cursoId, EstadoMatricula.RETIRADO);
+        long capacidad = curso.getCapacidadMaxima() != null ? curso.getCapacidadMaxima() : 30;
+        long disponibles = Math.max(0, capacidad - inscritos);
+
+        return Map.of(
+                "cursoId", cursoId,
+                "cursoCodigo", curso.getCodigo(),
+                "cursoNombre", curso.getNombre(),
+                "capacidadMaxima", capacidad,
+                "inscritos", inscritos,
+                "vacantesDisponibles", disponibles,
+                "disponible", disponibles > 0
+        );
     }
 
     private void validarPrerrequisitos(Long estudianteId, Curso curso) {

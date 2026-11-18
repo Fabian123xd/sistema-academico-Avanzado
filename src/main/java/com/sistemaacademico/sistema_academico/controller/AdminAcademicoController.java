@@ -62,7 +62,8 @@ public class AdminAcademicoController {
             Long periodoId,
             Long carreraId,
             Integer ciclo,
-            String tipo
+            String tipo,
+            Integer capacidadMaxima
     ) {}
 
     @PostMapping("/cursos")
@@ -72,12 +73,17 @@ public class AdminAcademicoController {
         curso.setNombre(req.nombre());
         curso.setCreditos(req.creditos());
         TipoCurso tipo = req.tipo() != null && !req.tipo().isBlank() ? TipoCurso.valueOf(req.tipo()) : TipoCurso.OBLIGATORIO;
-        return academicoService.crearCurso(curso, req.docenteId(), req.periodoId(), req.carreraId(), req.ciclo(), tipo);
+        return academicoService.crearCurso(curso, req.docenteId(), req.periodoId(), req.carreraId(), req.ciclo(), tipo, req.capacidadMaxima());
     }
 
     @GetMapping("/cursos")
     public List<Curso> listarCursos() {
         return academicoService.listarCursos();
+    }
+
+    @GetMapping("/cursos/{id}/vacantes")
+    public Map<String, Object> obtenerVacantes(@PathVariable Long id) {
+        return academicoService.obtenerVacantes(id);
     }
 
     @PatchMapping("/cursos/{id}/docente")
