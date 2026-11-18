@@ -8,6 +8,7 @@ import com.sistemaacademico.sistema_academico.security.UsuarioDetails;
 import com.sistemaacademico.sistema_academico.service.AcademicoService;
 import com.sistemaacademico.sistema_academico.service.DocenteService;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +38,22 @@ public class DocenteController {
     public List<Matricula> matriculasDeCurso(@PathVariable Long id, @AuthenticationPrincipal UsuarioDetails principal) {
         academicoService.verificarCursoDeDocente(id, docenteId(principal));
         return academicoService.matriculasDeCurso(id);
+    }
+
+    // ---- Criterios de Evaluación y Ponderaciones ----
+    @GetMapping("/cursos/{id}/criterios")
+    public List<CriterioEvaluacion> listarCriterios(@PathVariable Long id, @AuthenticationPrincipal UsuarioDetails principal) {
+        return docenteService.listarCriteriosDeCurso(id, docenteId(principal));
+    }
+
+    @PostMapping("/cursos/{id}/criterios")
+    public CriterioEvaluacion crearCriterio(@PathVariable Long id, @RequestBody CriterioEvaluacion criterio, @AuthenticationPrincipal UsuarioDetails principal) {
+        return docenteService.crearCriterio(id, criterio, docenteId(principal));
+    }
+
+    @DeleteMapping("/criterios/{criterioId}")
+    public void eliminarCriterio(@PathVariable Long criterioId, @AuthenticationPrincipal UsuarioDetails principal) {
+        docenteService.eliminarCriterio(criterioId, docenteId(principal));
     }
 
     // ---- Notas ----
@@ -91,5 +108,16 @@ public class DocenteController {
     @PatchMapping("/entregas/{id}/calificar")
     public Entrega calificarEntrega(@PathVariable Long id, @RequestBody CalificarEntregaRequest req, @AuthenticationPrincipal UsuarioDetails principal) {
         return docenteService.calificarEntrega(id, req, docenteId(principal));
+    }
+
+    // ---- Acta Oficial de Notas y Cierre ----
+    @GetMapping("/cursos/{id}/acta")
+    public Map<String, Object> obtenerActa(@PathVariable Long id, @AuthenticationPrincipal UsuarioDetails principal) {
+        return docenteService.obtenerActaCurso(id, docenteId(principal));
+    }
+
+    @PostMapping("/cursos/{id}/cerrar-acta")
+    public Map<String, Object> cerrarActa(@PathVariable Long id, @AuthenticationPrincipal UsuarioDetails principal) {
+        return docenteService.cerrarActaCurso(id, docenteId(principal));
     }
 }

@@ -21,6 +21,10 @@ public class Nota {
     @JoinColumn(name = "matricula_id")
     private Matricula matricula;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "criterio_id")
+    private CriterioEvaluacion criterio;
+
     /** Ej: "Practica 1", "Examen Parcial", "Trabajo Final" */
     private String concepto;
 

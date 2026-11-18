@@ -4,8 +4,15 @@ export default {
   misCursos: () => api.get('/docente/cursos').then(r => r.data),
   matriculasDeCurso: (cursoId) => api.get(`/docente/cursos/${cursoId}/matriculas`).then(r => r.data),
 
+  // Criterios y Ponderaciones
+  listarCriterios: (cursoId) => api.get(`/docente/cursos/${cursoId}/criterios`).then(r => r.data),
+  crearCriterio: (cursoId, data) => api.post(`/docente/cursos/${cursoId}/criterios`, data).then(r => r.data),
+  eliminarCriterio: (criterioId) => api.delete(`/docente/criterios/${criterioId}`).then(r => r.data),
+
   registrarNota: (data) => api.post('/docente/notas', data).then(r => r.data),
   notasDeCurso: (cursoId) => api.get(`/docente/cursos/${cursoId}/notas`).then(r => r.data),
+  obtenerActa: (cursoId) => api.get(`/docente/cursos/${cursoId}/acta`).then(r => r.data),
+  cerrarActa: (cursoId) => api.post(`/docente/cursos/${cursoId}/cerrar-acta`).then(r => r.data),
 
   registrarAsistencia: (data) => api.post('/docente/asistencia', data).then(r => r.data),
   asistenciaDeCurso: (cursoId) => api.get(`/docente/cursos/${cursoId}/asistencia`).then(r => r.data),

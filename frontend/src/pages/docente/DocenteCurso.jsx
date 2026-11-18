@@ -9,6 +9,7 @@ export default function DocenteCurso() {
 
   const [matriculas, setMatriculas] = useState([])
   const [notas, setNotas] = useState([])
+  const [criterios, setCriterios] = useState([])
   const [asistencias, setAsistencias] = useState([])
   const [materiales, setMateriales] = useState([])
   const [evaluaciones, setEvaluaciones] = useState([])
@@ -17,17 +18,42 @@ export default function DocenteCurso() {
   const [mensaje, setMensaje] = useState(null)
   const [error, setError] = useState(null)
 
-  const [notaForm, setNotaForm] = useState({ matriculaId: '', concepto: '', valor: '', comentario: '' })
+  const [notaForm, setNotaForm] = useState({ matriculaId: '', criterioId: '', concepto: '', valor: '', comentario: '' })
   const [asistenciaForm, setAsistenciaForm] = useState({ matriculaId: '', fecha: '', estado: 'PRESENTE', observacion: '' })
   const [materialForm, setMaterialForm] = useState({ titulo: '', descripcion: '', urlArchivo: '' })
   const [evalForm, setEvalForm] = useState({ titulo: '', descripcion: '', tipo: 'TAREA', fechaEntrega: '', puntajeMaximo: 20 })
+  const [criterioForm, setCriterioForm] = useState({ codigo: '', nombre: '', porcentaje: '' })
+  const [mostrarGestorCriterios, setMostrarGestorCriterios] = useState(false)
+  const [acta, setActa] = useState(null)
+  const [cerrandoActa, setCerrandoActa] = useState(false)
 
   const cargarTodo = () => {
     docenteService.matriculasDeCurso(cursoId).then(setMatriculas)
     docenteService.notasDeCurso(cursoId).then(setNotas)
+    docenteService.listarCriterios(cursoId).then(setCriterios)
+    docenteService.obtenerActa(cursoId).then(setActa).catch(() => setActa(null))
     docenteService.asistenciaDeCurso(cursoId).then(setAsistencias)
     docenteService.materialesDeCurso(cursoId).then(setMateriales)
     docenteService.evaluacionesDeCurso(cursoId).then(setEvaluaciones)
+  }
+
+  const cerrarActaOficial = async () => {
+    if (!window.confirm('¿Estás seguro de calcular los promedios finales y cerrar el Acta Oficial? Esta acción actualizará la condición académica (Aprobado/Desaprobado) de los estudiantes.')) {
+      return
+    }
+    setCerrandoActa(true)
+    setError(null)
+    setMensaje(null)
+    try {
+      const res = await docenteService.cerrarActa(cursoId)
+      setActa(res)
+      setMensaje('¡Acta de calificaciones calculada y cerrada oficialmente!')
+      cargarTodo()
+    } catch (err) {
+      setError(err?.response?.data?.mensaje || 'Error al cerrar el acta.')
+    } finally {
+      setCerrandoActa(false)
+    }
   }
 
   useEffect(() => { cargarTodo() }, [cursoId])
@@ -46,9 +72,26 @@ export default function DocenteCurso() {
   }
 
   const guardarNota = notificar(async () => {
-    await docenteService.registrarNota({ ...notaForm, valor: Number(notaForm.valor) })
-    setNotaForm({ matriculaId: '', concepto: '', valor: '', comentario: '' })
+    await docenteService.registrarNota({
+      ...notaForm,
+      valor: Number(notaForm.valor),
+      criterioId: notaForm.criterioId ? Number(notaForm.criterioId) : null
+    })
+    setNotaForm({ matriculaId: '', criterioId: '', concepto: '', valor: '', comentario: '' })
   })
+
+  const guardarCriterio = notificar(async (e) => {
+    e.preventDefault()
+    await docenteService.crearCriterio(cursoId, {
+      ...criterioForm,
+      porcentaje: Number(criterioForm.porcentaje)
+    })
+    setCriterioForm({ codigo: '', nombre: '', porcentaje: '' })
+  })
+
+  const eliminarCriterio = (criterioId) => notificar(async () => {
+    await docenteService.eliminarCriterio(criterioId)
+  })()
 
   const guardarAsistencia = notificar(async () => {
     await docenteService.registrarAsistencia(asistenciaForm)
@@ -106,11 +149,83 @@ export default function DocenteCurso() {
         </Tab>
 
         <Tab eventKey="notas" title="Notas">
+          {/* Banner de Ponderaciones y Sistema de Evaluación */}
+          <Card className="card-custom p-3 mb-3 bg-light">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <strong>📐 Fórmula de Calificación del Curso:</strong>
+                <div className="d-flex gap-2 mt-1 flex-wrap align-items-center">
+                  {criterios.map(c => (
+                    <Badge key={c.id} bg="primary" className="py-2 px-3">
+                      {c.codigo}: {c.porcentaje}% ({c.nombre})
+                    </Badge>
+                  ))}
+                  <span className="small-muted">
+                    Total: <strong>{criterios.reduce((acc, c) => acc + c.porcentaje, 0)}%</strong>
+                  </span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline-secondary"
+                onClick={() => setMostrarGestorCriterios(!mostrarGestorCriterios)}
+              >
+                {mostrarGestorCriterios ? 'Ocultar Ponderaciones' : '⚙️ Configurar Ponderaciones'}
+              </Button>
+            </div>
+
+            {/* Sub-formulario para agregar nuevos criterios si la suma es < 100% */}
+            {mostrarGestorCriterios && (
+              <div className="mt-3 pt-3 border-top">
+                <h6>Agregar Criterio de Evaluación</h6>
+                <Form onSubmit={guardarCriterio}>
+                  <Row className="g-2 align-items-end">
+                    <Col md={3}>
+                      <Form.Label>Código (ej. TI, EXP)</Form.Label>
+                      <Form.Control
+                        required
+                        size="sm"
+                        placeholder="TI"
+                        value={criterioForm.codigo}
+                        onChange={e => setCriterioForm({ ...criterioForm, codigo: e.target.value })}
+                      />
+                    </Col>
+                    <Col md={5}>
+                      <Form.Label>Nombre Criterio</Form.Label>
+                      <Form.Control
+                        required
+                        size="sm"
+                        placeholder="Trabajo de Investigación"
+                        value={criterioForm.nombre}
+                        onChange={e => setCriterioForm({ ...criterioForm, nombre: e.target.value })}
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label>Peso (%)</Form.Label>
+                      <Form.Control
+                        required
+                        size="sm"
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={criterioForm.porcentaje}
+                        onChange={e => setCriterioForm({ ...criterioForm, porcentaje: e.target.value })}
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Button type="submit" size="sm" className="w-100">Guardar</Button>
+                    </Col>
+                  </Row>
+                </Form>
+              </div>
+            )}
+          </Card>
+
           <Card className="card-custom p-3 mb-3">
             <h6>Registrar nota</h6>
             <Form onSubmit={guardarNota}>
               <Row className="g-2 align-items-end">
-                <Col md={4}>
+                <Col md={3}>
                   <Form.Label>Estudiante</Form.Label>
                   <Form.Select required value={notaForm.matriculaId} onChange={(e) => setNotaForm({ ...notaForm, matriculaId: e.target.value })}>
                     <option value="">Selecciona...</option>
@@ -118,32 +233,154 @@ export default function DocenteCurso() {
                   </Form.Select>
                 </Col>
                 <Col md={3}>
+                  <Form.Label>Criterio / Ponderación</Form.Label>
+                  <Form.Select
+                    value={notaForm.criterioId}
+                    onChange={(e) => {
+                      const sel = criterios.find(c => c.id === Number(e.target.value))
+                      setNotaForm({
+                        ...notaForm,
+                        criterioId: e.target.value,
+                        concepto: sel ? sel.nombre : notaForm.concepto
+                      })
+                    }}
+                  >
+                    <option value="">Seleccionar Criterio...</option>
+                    {criterios.map(c => (
+                      <option key={c.id} value={c.id}>{c.codigo} — {c.nombre} ({c.porcentaje}%)</option>
+                    ))}
+                  </Form.Select>
+                </Col>
+                <Col md={3}>
                   <Form.Label>Concepto</Form.Label>
                   <Form.Control required placeholder="Ej. Examen Parcial" value={notaForm.concepto} onChange={(e) => setNotaForm({ ...notaForm, concepto: e.target.value })} />
                 </Col>
-                <Col md={2}>
+                <Col md={1}>
                   <Form.Label>Valor</Form.Label>
                   <Form.Control required type="number" step="0.1" min="0" max="20" value={notaForm.valor} onChange={(e) => setNotaForm({ ...notaForm, valor: e.target.value })} />
                 </Col>
-                <Col md={3}>
-                  <Button type="submit" className="w-100">Guardar nota</Button>
+                <Col md={2}>
+                  <Button type="submit" className="w-100">Guardar</Button>
                 </Col>
               </Row>
             </Form>
           </Card>
+
           <Card className="card-custom p-3">
             <Table striped hover responsive>
-              <thead><tr><th>Estudiante</th><th>Concepto</th><th>Valor</th><th>Fecha</th></tr></thead>
+              <thead><tr><th>Estudiante</th><th>Criterio</th><th>Concepto</th><th>Valor</th><th>Fecha</th></tr></thead>
               <tbody>
                 {notas.map((n) => (
                   <tr key={n.id}>
                     <td>{nombreEstudiante(n.matricula?.id)}</td>
+                    <td>
+                      {n.criterio ? (
+                        <Badge bg="info">{n.criterio.codigo} ({n.criterio.porcentaje}%)</Badge>
+                      ) : (
+                        <Badge bg="secondary">General</Badge>
+                      )}
+                    </td>
                     <td>{n.concepto}</td>
-                    <td>{n.valor}</td>
+                    <td><strong className={n.valor >= 10.5 ? 'text-success' : 'text-danger'}>{n.valor}</strong></td>
                     <td>{n.fecha}</td>
                   </tr>
                 ))}
-                {notas.length === 0 && <tr><td colSpan={4} className="text-center small-muted">Sin notas registradas</td></tr>}
+                {notas.length === 0 && <tr><td colSpan={5} className="text-center small-muted">Sin notas registradas</td></tr>}
+              </tbody>
+            </Table>
+          </Card>
+        </Tab>
+
+        <Tab eventKey="acta" title="Acta Oficial y Promedios">
+          <Card className="card-custom p-3 mb-3">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <h5 className="mb-1">Acta de Calificaciones Ponderadas</h5>
+                <div className="small-muted">
+                  Cálculo automático de nota final según las ponderaciones del curso (Aprobatorio ≥ 10.5).
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                {acta?.actaCerrada ? (
+                  <Badge bg="success" className="p-2">
+                    ✓ Acta Oficial Cerrada {acta.fechaCierre ? `(${new Date(acta.fechaCierre).toLocaleDateString()})` : ''}
+                  </Badge>
+                ) : (
+                  <Badge bg="warning" text="dark" className="p-2">
+                    Acta en Borrador / Abierta
+                  </Badge>
+                )}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={cerrandoActa || !acta?.filas?.length}
+                  onClick={cerrarActaOficial}
+                >
+                  {cerrandoActa ? 'Procesando...' : '⚡ Calcular Promedios y Cerrar Acta'}
+                </Button>
+              </div>
+            </div>
+
+            <Table striped hover responsive className="mt-3 align-middle">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Estudiante</th>
+                  {acta?.criterios?.map(c => (
+                    <th key={c.id} className="text-center">
+                      {c.codigo} <br />
+                      <small className="text-muted fw-normal">({c.porcentaje}%)</small>
+                    </th>
+                  ))}
+                  <th className="text-center">Promedio Final</th>
+                  <th className="text-center">Condición</th>
+                </tr>
+              </thead>
+              <tbody>
+                {acta?.filas?.map(f => (
+                  <tr key={f.matriculaId}>
+                    <td><strong>{f.estudianteCodigo}</strong></td>
+                    <td>{f.estudianteNombre}</td>
+                    {acta.criterios.map(c => {
+                      const notaCrit = f.notasPorCriterio ? f.notasPorCriterio[c.codigo] : null
+                      return (
+                        <td key={c.id} className="text-center">
+                          {notaCrit != null ? (
+                            <span className={notaCrit >= 10.5 ? 'text-success fw-bold' : 'text-danger fw-bold'}>
+                              {notaCrit}
+                            </span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                    <td className="text-center">
+                      <strong className={`fs-6 ${(f.promedioFinal ?? f.promedioCalculado) >= 10.5 ? 'text-success' : 'text-danger'}`}>
+                        {f.promedioFinal ?? f.promedioCalculado ?? '0.0'}
+                      </strong>
+                    </td>
+                    <td className="text-center">
+                      <Badge
+                        bg={
+                          f.estado === 'APROBADO' ? 'success'
+                          : f.estado === 'DESAPROBADO' ? 'danger'
+                          : f.estado === 'COMPLETADO' ? 'primary'
+                          : 'secondary'
+                        }
+                      >
+                        {f.estado}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+                {(!acta?.filas || acta.filas.length === 0) && (
+                  <tr>
+                    <td colSpan={4 + (acta?.criterios?.length || 0)} className="text-center small-muted py-3">
+                      No hay estudiantes matriculados en este curso.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </Table>
           </Card>

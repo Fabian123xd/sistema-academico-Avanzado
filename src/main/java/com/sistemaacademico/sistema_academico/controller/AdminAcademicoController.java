@@ -3,6 +3,7 @@ package com.sistemaacademico.sistema_academico.controller;
 import com.sistemaacademico.sistema_academico.dto.MatricularRequest;
 import com.sistemaacademico.sistema_academico.model.*;
 import com.sistemaacademico.sistema_academico.service.AcademicoService;
+import com.sistemaacademico.sistema_academico.service.EstudianteService;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class AdminAcademicoController {
 
     private final AcademicoService academicoService;
+    private final EstudianteService estudianteService;
 
-    public AdminAcademicoController(AcademicoService academicoService) {
+    public AdminAcademicoController(AcademicoService academicoService, EstudianteService estudianteService) {
         this.academicoService = academicoService;
+        this.estudianteService = estudianteService;
     }
 
     // ---- Carreras ----
@@ -127,5 +130,11 @@ public class AdminAcademicoController {
     @GetMapping("/matriculas/validar-cruce")
     public Map<String, Object> verificarCruceHorario(@RequestParam Long estudianteId, @RequestParam Long cursoId) {
         return academicoService.verificarCruceHorario(estudianteId, cursoId);
+    }
+
+    // ---- Cuadro de Merito / Ranking Academico ----
+    @GetMapping("/cuadro-merito")
+    public List<Map<String, Object>> cuadroMerito(@RequestParam(required = false) Long carreraId) {
+        return estudianteService.generarCuadroMerito(carreraId);
     }
 }

@@ -2,6 +2,7 @@ package com.sistemaacademico.sistema_academico.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,4 +30,10 @@ public class Matricula {
 
     @Enumerated(EnumType.STRING)
     private EstadoMatricula estado = EstadoMatricula.INSCRITO;
+
+    @Column(name = "promedio_final")
+    private Double promedioFinal;
+
+    @Column(name = "fecha_cierre")
+    private LocalDateTime fechaCierre;
 }

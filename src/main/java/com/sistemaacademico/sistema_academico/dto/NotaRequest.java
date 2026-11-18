@@ -4,5 +4,10 @@ public record NotaRequest(
         Long matriculaId,
         String concepto,
         Double valor,
-        String comentario
-) {}
+        String comentario,
+        Long criterioId
+) {
+    public NotaRequest(Long matriculaId, String concepto, Double valor, String comentario) {
+        this(matriculaId, concepto, valor, comentario, null);
+    }
+}
