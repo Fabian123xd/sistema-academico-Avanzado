@@ -22,18 +22,47 @@ public class AcademicoService {
     private final EstudianteRepository estudianteRepository;
     private final MatriculaRepository matriculaRepository;
     private final HorarioRepository horarioRepository;
- 
+    private final CarreraRepository carreraRepository;
+
     public AcademicoService(PeriodoAcademicoRepository periodoRepository, CursoRepository cursoRepository,
                              DocenteRepository docenteRepository, EstudianteRepository estudianteRepository,
-                             MatriculaRepository matriculaRepository, HorarioRepository horarioRepository) {
+                             MatriculaRepository matriculaRepository, HorarioRepository horarioRepository,
+                             CarreraRepository carreraRepository) {
         this.periodoRepository = periodoRepository;
         this.cursoRepository = cursoRepository;
         this.docenteRepository = docenteRepository;
         this.estudianteRepository = estudianteRepository;
         this.matriculaRepository = matriculaRepository;
         this.horarioRepository = horarioRepository;
+        this.carreraRepository = carreraRepository;
     }
- 
+
+    // ---- Carreras y Malla Curricular ----
+    @Transactional
+    public Carrera crearCarrera(Carrera carrera) {
+        if (carreraRepository.findByCodigo(carrera.getCodigo()).isPresent()) {
+            throw new ApiException("Ya existe una carrera con el código: " + carrera.getCodigo(), HttpStatus.CONFLICT);
+        }
+        return carreraRepository.save(carrera);
+    }
+
+    public List<Carrera> listarCarreras() {
+        return carreraRepository.findAll();
+    }
+
+    public Carrera obtenerCarrera(Long id) {
+        return carreraRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Carrera no encontrada", HttpStatus.NOT_FOUND));
+    }
+
+    public List<Curso> listarCursosPorCarrera(Long carreraId) {
+        return cursoRepository.findByCarreraId(carreraId);
+    }
+
+    public List<Curso> listarCursosPorCarreraYCiclo(Long carreraId, Integer ciclo) {
+        return cursoRepository.findByCarreraIdAndCiclo(carreraId, ciclo);
+    }
+
     // ---- Periodos ----
     public PeriodoAcademico crearPeriodo(PeriodoAcademico periodo) {
         return periodoRepository.save(periodo);
@@ -46,6 +75,11 @@ public class AcademicoService {
     // ---- Cursos ----
     @Transactional
     public Curso crearCurso(Curso curso, Long docenteId, Long periodoId) {
+        return crearCurso(curso, docenteId, periodoId, null, 1, TipoCurso.OBLIGATORIO);
+    }
+
+    @Transactional
+    public Curso crearCurso(Curso curso, Long docenteId, Long periodoId, Long carreraId, Integer ciclo, TipoCurso tipo) {
         if (docenteId != null) {
             Docente docente = docenteRepository.findByUsuarioId(docenteId)
                     .orElseThrow(() -> new ApiException("Docente no encontrado", HttpStatus.NOT_FOUND));
@@ -55,6 +89,17 @@ public class AcademicoService {
             PeriodoAcademico periodo = periodoRepository.findById(periodoId)
                     .orElseThrow(() -> new ApiException("Periodo no encontrado", HttpStatus.NOT_FOUND));
             curso.setPeriodo(periodo);
+        }
+        if (carreraId != null) {
+            Carrera carrera = carreraRepository.findById(carreraId)
+                    .orElseThrow(() -> new ApiException("Carrera no encontrada", HttpStatus.NOT_FOUND));
+            curso.setCarrera(carrera);
+        }
+        if (ciclo != null && ciclo >= 1) {
+            curso.setCiclo(ciclo);
+        }
+        if (tipo != null) {
+            curso.setTipo(tipo);
         }
         return cursoRepository.save(curso);
     }

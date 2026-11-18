@@ -9,6 +9,11 @@ export default {
   cambiarEstado: (id, activo) => api.patch(`/admin/usuarios/${id}/estado?activo=${activo}`).then(r => r.data),
   eliminarUsuario: (id) => api.delete(`/admin/usuarios/${id}`).then(r => r.data),
 
+  // Carreras
+  crearCarrera: (data) => api.post('/admin/carreras', data).then(r => r.data),
+  listarCarreras: () => api.get('/admin/carreras').then(r => r.data),
+  cursosDeCarrera: (carreraId, ciclo) => api.get(`/admin/carreras/${carreraId}/cursos${ciclo ? `?ciclo=${ciclo}` : ''}`).then(r => r.data),
+
   // Periodos
   crearPeriodo: (data) => api.post('/admin/periodos', data).then(r => r.data),
   listarPeriodos: () => api.get('/admin/periodos').then(r => r.data),

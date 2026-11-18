@@ -30,4 +30,15 @@ public class Curso {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "periodo_id")
     private PeriodoAcademico periodo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "carrera_id")
+    private Carrera carrera;
+
+    @Column(nullable = false)
+    private Integer ciclo = 1;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TipoCurso tipo = TipoCurso.OBLIGATORIO;
 }
