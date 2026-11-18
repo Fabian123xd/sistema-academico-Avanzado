@@ -23,6 +23,9 @@ export default {
   listarCursos: () => api.get('/admin/cursos').then(r => r.data),
   asignarDocente: (cursoId, docenteId) => api.patch(`/admin/cursos/${cursoId}/docente?docenteId=${docenteId}`).then(r => r.data),
   crearHorario: (cursoId, data) => api.post(`/admin/cursos/${cursoId}/horarios`, data).then(r => r.data),
+  agregarPrerrequisito: (cursoId, prerrequisitoId) => api.post(`/admin/cursos/${cursoId}/prerrequisitos?prerrequisitoId=${prerrequisitoId}`).then(r => r.data),
+  eliminarPrerrequisito: (cursoId, prerrequisitoId) => api.delete(`/admin/cursos/${cursoId}/prerrequisitos/${prerrequisitoId}`).then(r => r.data),
+  listarPrerrequisitos: (cursoId) => api.get(`/admin/cursos/${cursoId}/prerrequisitos`).then(r => r.data),
 
   // Matriculas
   matricular: (estudianteId, cursoId) => api.post('/admin/matriculas', { estudianteId, cursoId }).then(r => r.data),

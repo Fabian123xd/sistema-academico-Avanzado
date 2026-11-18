@@ -121,7 +121,36 @@ public class AcademicoService {
     public List<Curso> listarCursosPorDocente(Long docenteId) {
         return cursoRepository.findByDocenteId(docenteId);
     }
- 
+
+    // ---- Prerrequisitos de Cursos ----
+    @Transactional
+    public Curso asignarPrerrequisito(Long cursoId, Long prerrequisitoId) {
+        if (cursoId.equals(prerrequisitoId)) {
+            throw new ApiException("Un curso no puede ser prerrequisito de sí mismo", HttpStatus.BAD_REQUEST);
+        }
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new ApiException("Curso no encontrado", HttpStatus.NOT_FOUND));
+        Curso prerrequisito = cursoRepository.findById(prerrequisitoId)
+                .orElseThrow(() -> new ApiException("Curso prerrequisito no encontrado", HttpStatus.NOT_FOUND));
+
+        curso.getPrerrequisitos().add(prerrequisito);
+        return cursoRepository.save(curso);
+    }
+
+    @Transactional
+    public Curso eliminarPrerrequisito(Long cursoId, Long prerrequisitoId) {
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new ApiException("Curso no encontrado", HttpStatus.NOT_FOUND));
+        curso.getPrerrequisitos().removeIf(p -> p.getId().equals(prerrequisitoId));
+        return cursoRepository.save(curso);
+    }
+
+    public List<Curso> listarPrerrequisitos(Long cursoId) {
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new ApiException("Curso no encontrado", HttpStatus.NOT_FOUND));
+        return List.copyOf(curso.getPrerrequisitos());
+    }
+
     // ---- Horarios ----
     public Horario crearHorario(Long cursoId, Horario horario) {
         Curso curso = cursoRepository.findById(cursoId)
@@ -145,12 +174,35 @@ public class AcademicoService {
         matriculaRepository.findByEstudianteIdAndCursoId(estudiante.getId(), curso.getId()).ifPresent(m -> {
             throw new ApiException("El estudiante ya esta matriculado en este curso", HttpStatus.CONFLICT);
         });
- 
+
+        // Validar cumplimiento de prerrequisitos
+        validarPrerrequisitos(estudiante.getId(), curso);
+
         Matricula matricula = new Matricula();
         matricula.setEstudiante(estudiante);
         matricula.setCurso(curso);
         matricula.setEstado(EstadoMatricula.INSCRITO);
         return matriculaRepository.save(matricula);
+    }
+
+    private void validarPrerrequisitos(Long estudianteId, Curso curso) {
+        if (curso.getPrerrequisitos() == null || curso.getPrerrequisitos().isEmpty()) {
+            return;
+        }
+
+        List<Matricula> matriculasEstudiante = matriculaRepository.findByEstudianteId(estudianteId);
+        for (Curso prereq : curso.getPrerrequisitos()) {
+            boolean aprobado = matriculasEstudiante.stream()
+                    .anyMatch(m -> m.getCurso().getId().equals(prereq.getId()) && m.getEstado() == EstadoMatricula.COMPLETADO);
+
+            if (!aprobado) {
+                throw new ApiException(
+                        "No cumples con el prerrequisito obligatorio: debes aprobar previamente el curso '" 
+                        + prereq.getNombre() + "' (" + prereq.getCodigo() + ")",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+        }
     }
  
     public List<Matricula> matriculasDeEstudiante(Long estudianteId) {

@@ -85,6 +85,22 @@ public class AdminAcademicoController {
         return academicoService.asignarDocente(id, docenteId);
     }
 
+    // ---- Prerrequisitos ----
+    @PostMapping("/cursos/{id}/prerrequisitos")
+    public Curso asignarPrerrequisito(@PathVariable Long id, @RequestParam Long prerrequisitoId) {
+        return academicoService.asignarPrerrequisito(id, prerrequisitoId);
+    }
+
+    @DeleteMapping("/cursos/{id}/prerrequisitos/{prerrequisitoId}")
+    public Curso eliminarPrerrequisito(@PathVariable Long id, @PathVariable Long prerrequisitoId) {
+        return academicoService.eliminarPrerrequisito(id, prerrequisitoId);
+    }
+
+    @GetMapping("/cursos/{id}/prerrequisitos")
+    public List<Curso> listarPrerrequisitos(@PathVariable Long id) {
+        return academicoService.listarPrerrequisitos(id);
+    }
+
     // ---- Horarios ----
     @PostMapping("/cursos/{id}/horarios")
     public Horario crearHorario(@PathVariable Long id, @RequestBody Horario horario) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Table, Form, Button, Row, Col, Alert, Badge, Tabs, Tab } from 'react-bootstrap'
+import { Card, Table, Form, Button, Row, Col, Alert, Badge, Tabs, Tab, Modal } from 'react-bootstrap'
 import adminService from '../../services/adminService'
 
 const CURSO_VACIO = { codigo: '', nombre: '', creditos: '', docenteId: '', periodoId: '', carreraId: '', ciclo: '1', tipo: 'OBLIGATORIO' }
@@ -17,6 +17,48 @@ export default function AdminCursos() {
   const [carreraForm, setCarreraForm] = useState(CARRERA_VACIO)
   const [error, setError] = useState(null)
   const [mensaje, setMensaje] = useState(null)
+
+  // Estado para gestión de prerrequisitos
+  const [cursoPrereqSel, setCursoPrereqSel] = useState(null)
+  const [prerrequisitosCurso, setPrerrequisitosCurso] = useState([])
+  const [nuevoPrereqId, setNuevoPrereqId] = useState('')
+
+  const abrirModalPrereq = async (curso) => {
+    setCursoPrereqSel(curso)
+    setNuevoPrereqId('')
+    try {
+      const data = await adminService.listarPrerrequisitos(curso.id)
+      setPrerrequisitosCurso(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const agregarPrerrequisito = async (e) => {
+    e.preventDefault()
+    if (!nuevoPrereqId || !cursoPrereqSel) return
+    try {
+      await adminService.agregarPrerrequisito(cursoPrereqSel.id, nuevoPrereqId)
+      setNuevoPrereqId('')
+      const data = await adminService.listarPrerrequisitos(cursoPrereqSel.id)
+      setPrerrequisitosCurso(data)
+      setMensaje('Prerrequisito asignado correctamente.')
+    } catch (err) {
+      setError(err?.response?.data?.mensaje || 'Error al asignar prerrequisito.')
+    }
+  }
+
+  const eliminarPrerrequisito = async (prereqId) => {
+    if (!cursoPrereqSel) return
+    try {
+      await adminService.eliminarPrerrequisito(cursoPrereqSel.id, prereqId)
+      const data = await adminService.listarPrerrequisitos(cursoPrereqSel.id)
+      setPrerrequisitosCurso(data)
+      setMensaje('Prerrequisito removido.')
+    } catch (err) {
+      setError(err?.response?.data?.mensaje || 'Error al eliminar prerrequisito.')
+    }
+  }
 
   const cargar = async () => {
     try {
@@ -253,6 +295,7 @@ export default function AdminCursos() {
               <th>Créditos</th>
               <th>Periodo</th>
               <th>Docente</th>
+              <th className="text-center">Prerrequisitos</th>
             </tr>
           </thead>
           <tbody>
@@ -275,11 +318,16 @@ export default function AdminCursos() {
                     {docentes.map((d) => <option key={d.id} value={d.id}>{d.nombres} {d.apellidos}</option>)}
                   </Form.Select>
                 </td>
+                <td className="text-center">
+                  <Button size="sm" variant="outline-info" onClick={() => abrirModalPrereq(c)}>
+                    Gestionar
+                  </Button>
+                </td>
               </tr>
             ))}
             {cursosFiltrados.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center small-muted py-4">
+                <td colSpan={9} className="text-center small-muted py-4">
                   No hay cursos registrados en esta categoría
                 </td>
               </tr>
@@ -287,6 +335,63 @@ export default function AdminCursos() {
           </tbody>
         </Table>
       </Card>
+
+      {/* Modal de Prerrequisitos */}
+      <Modal show={!!cursoPrereqSel} onHide={() => setCursoPrereqSel(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Prerrequisitos: {cursoPrereqSel?.codigo} — {cursoPrereqSel?.nombre}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="small-muted">
+            Los cursos configurados aquí deberán haber sido aprobados previamente por el estudiante para poder matricularse en esta asignatura.
+          </p>
+
+          <Form onSubmit={agregarPrerrequisito} className="mb-3">
+            <Form.Label>Agregar Curso Prerrequisito</Form.Label>
+            <div className="d-flex gap-2">
+              <Form.Select
+                value={nuevoPrereqId}
+                onChange={(e) => setNuevoPrereqId(e.target.value)}
+                required
+              >
+                <option value="">Selecciona curso previo...</option>
+                {cursos
+                  .filter(c => c.id !== cursoPrereqSel?.id && !prerrequisitosCurso.some(p => p.id === c.id))
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.codigo} — {c.nombre} (Ciclo {c.ciclo || 1})</option>
+                  ))
+                }
+              </Form.Select>
+              <Button type="submit" variant="primary" size="sm" style={{ whiteSpace: 'nowrap' }}>
+                Agregar
+              </Button>
+            </div>
+          </Form>
+
+          <h6>Prerrequisitos actuales:</h6>
+          <ul className="list-group">
+            {prerrequisitosCurso.map(p => (
+              <li key={p.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
+                <div>
+                  <strong>{p.codigo}</strong> — {p.nombre}
+                  <span className="small-muted ms-2">(Ciclo {p.ciclo || 1})</span>
+                </div>
+                <Button size="sm" variant="outline-danger" onClick={() => eliminarPrerrequisito(p.id)}>
+                  Quitar
+                </Button>
+              </li>
+            ))}
+            {prerrequisitosCurso.length === 0 && (
+              <li className="list-group-item text-center small-muted py-3">
+                Este curso no tiene prerrequisitos obligatorios.
+              </li>
+            )}
+          </ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setCursoPrereqSel(null)}>Cerrar</Button>
+        </Modal.Footer>
+      </Modal>
     </>
   )
 }

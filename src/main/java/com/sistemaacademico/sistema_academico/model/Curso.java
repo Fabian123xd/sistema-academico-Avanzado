@@ -1,9 +1,14 @@
 package com.sistemaacademico.sistema_academico.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "cursos")
@@ -41,4 +46,15 @@ public class Curso {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TipoCurso tipo = TipoCurso.OBLIGATORIO;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "curso_prerrequisitos",
+        joinColumns = @JoinColumn(name = "curso_id"),
+        inverseJoinColumns = @JoinColumn(name = "prerrequisito_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
+    private Set<Curso> prerrequisitos = new HashSet<>();
 }
