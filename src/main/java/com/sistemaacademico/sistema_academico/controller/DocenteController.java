@@ -39,6 +39,22 @@ public class DocenteController {
         return academicoService.matriculasDeCurso(id);
     }
 
+    // ---- Criterios de Evaluación y Ponderaciones ----
+    @GetMapping("/cursos/{id}/criterios")
+    public List<CriterioEvaluacion> listarCriterios(@PathVariable Long id, @AuthenticationPrincipal UsuarioDetails principal) {
+        return docenteService.listarCriteriosDeCurso(id, docenteId(principal));
+    }
+
+    @PostMapping("/cursos/{id}/criterios")
+    public CriterioEvaluacion crearCriterio(@PathVariable Long id, @RequestBody CriterioEvaluacion criterio, @AuthenticationPrincipal UsuarioDetails principal) {
+        return docenteService.crearCriterio(id, criterio, docenteId(principal));
+    }
+
+    @DeleteMapping("/criterios/{criterioId}")
+    public void eliminarCriterio(@PathVariable Long criterioId, @AuthenticationPrincipal UsuarioDetails principal) {
+        docenteService.eliminarCriterio(criterioId, docenteId(principal));
+    }
+
     // ---- Notas ----
     @PostMapping("/notas")
     public Nota registrarNota(@RequestBody NotaRequest req, @AuthenticationPrincipal UsuarioDetails principal) {

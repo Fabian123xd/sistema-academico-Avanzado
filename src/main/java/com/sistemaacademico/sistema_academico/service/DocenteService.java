@@ -24,11 +24,13 @@ public class DocenteService {
     private final EntregaRepository entregaRepository;
     private final CursoRepository cursoRepository;
     private final AcademicoService academicoService;
+    private final CriterioEvaluacionRepository criterioRepository;
 
     public DocenteService(MatriculaRepository matriculaRepository, NotaRepository notaRepository,
                            AsistenciaRepository asistenciaRepository, MaterialRepository materialRepository,
                            EvaluacionRepository evaluacionRepository, EntregaRepository entregaRepository,
-                           CursoRepository cursoRepository, AcademicoService academicoService) {
+                           CursoRepository cursoRepository, AcademicoService academicoService,
+                           CriterioEvaluacionRepository criterioRepository) {
         this.matriculaRepository = matriculaRepository;
         this.notaRepository = notaRepository;
         this.asistenciaRepository = asistenciaRepository;
@@ -37,6 +39,60 @@ public class DocenteService {
         this.entregaRepository = entregaRepository;
         this.cursoRepository = cursoRepository;
         this.academicoService = academicoService;
+        this.criterioRepository = criterioRepository;
+    }
+
+    // ---- Criterios y Ponderaciones de Evaluación ----
+    public List<CriterioEvaluacion> listarCriteriosDeCurso(Long cursoId, Long docenteId) {
+        academicoService.verificarCursoDeDocente(cursoId, docenteId);
+        List<CriterioEvaluacion> lista = criterioRepository.findByCursoIdOrderByOrdenAsc(cursoId);
+        if (lista.isEmpty()) {
+            return inicializarCriteriosEstandar(cursoId, docenteId);
+        }
+        return lista;
+    }
+
+    public List<CriterioEvaluacion> listarCriteriosDeCursoPublico(Long cursoId) {
+        return criterioRepository.findByCursoIdOrderByOrdenAsc(cursoId);
+    }
+
+    @Transactional
+    public CriterioEvaluacion crearCriterio(Long cursoId, CriterioEvaluacion criterio, Long docenteId) {
+        academicoService.verificarCursoDeDocente(cursoId, docenteId);
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new ApiException("Curso no encontrado", HttpStatus.NOT_FOUND));
+
+        List<CriterioEvaluacion> actuales = criterioRepository.findByCursoIdOrderByOrdenAsc(cursoId);
+        int sumaActual = actuales.stream().mapToInt(CriterioEvaluacion::getPorcentaje).sum();
+        if (sumaActual + criterio.getPorcentaje() > 100) {
+            throw new ApiException(
+                    "La suma de porcentajes no puede superar el 100%. Porcentaje actual: " + sumaActual + "%, intentando agregar: " + criterio.getPorcentaje() + "%",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        criterio.setCurso(curso);
+        criterio.setOrden(actuales.size() + 1);
+        return criterioRepository.save(criterio);
+    }
+
+    @Transactional
+    public void eliminarCriterio(Long criterioId, Long docenteId) {
+        CriterioEvaluacion criterio = criterioRepository.findById(criterioId)
+                .orElseThrow(() -> new ApiException("Criterio no encontrado", HttpStatus.NOT_FOUND));
+        academicoService.verificarCursoDeDocente(criterio.getCurso().getId(), docenteId);
+        criterioRepository.delete(criterio);
+    }
+
+    @Transactional
+    public List<CriterioEvaluacion> inicializarCriteriosEstandar(Long cursoId, Long docenteId) {
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new ApiException("Curso no encontrado", HttpStatus.NOT_FOUND));
+
+        CriterioEvaluacion c1 = new CriterioEvaluacion(null, curso, "PC", "Prácticas Calificadas", 30, 1);
+        CriterioEvaluacion c2 = new CriterioEvaluacion(null, curso, "EP", "Examen Parcial", 30, 2);
+        CriterioEvaluacion c3 = new CriterioEvaluacion(null, curso, "EF", "Examen Final", 40, 3);
+        return criterioRepository.saveAll(List.of(c1, c2, c3));
     }
 
     // ---- Notas ----
@@ -46,11 +102,24 @@ public class DocenteService {
                 .orElseThrow(() -> new ApiException("Matricula no encontrada", HttpStatus.NOT_FOUND));
         academicoService.verificarCursoDeDocente(matricula.getCurso().getId(), docenteId);
 
+        if (req.valor() != null && (req.valor() < 0 || req.valor() > 20)) {
+            throw new ApiException("La calificación debe estar en la escala de 0 a 20", HttpStatus.BAD_REQUEST);
+        }
+
         Nota nota = new Nota();
         nota.setMatricula(matricula);
-        nota.setConcepto(req.concepto());
         nota.setValor(req.valor());
         nota.setComentario(req.comentario());
+
+        if (req.criterioId() != null) {
+            CriterioEvaluacion criterio = criterioRepository.findById(req.criterioId())
+                    .orElseThrow(() -> new ApiException("Criterio de evaluación no encontrado", HttpStatus.NOT_FOUND));
+            nota.setCriterio(criterio);
+            nota.setConcepto(req.concepto() != null && !req.concepto().isBlank() ? req.concepto() : criterio.getNombre());
+        } else {
+            nota.setConcepto(req.concepto());
+        }
+
         return notaRepository.save(nota);
     }
 
