@@ -6,6 +6,7 @@ import com.sistemaacademico.sistema_academico.security.UsuarioDetails;
 import com.sistemaacademico.sistema_academico.service.AcademicoService;
 import com.sistemaacademico.sistema_academico.service.EstudianteService;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,5 +60,10 @@ public class EstudianteController {
     @GetMapping("/entregas")
     public List<Entrega> misEntregas(@AuthenticationPrincipal UsuarioDetails principal) {
         return estudianteService.misEntregas(estudianteId(principal));
+    }
+
+    @GetMapping("/rendimiento")
+    public Map<String, Object> miRendimiento(@AuthenticationPrincipal UsuarioDetails principal) {
+        return estudianteService.obtenerRendimientoEstudiante(estudianteId(principal));
     }
 }

@@ -8,4 +8,5 @@ export default {
   evaluacionesDisponibles: () => api.get('/estudiante/evaluaciones').then(r => r.data),
   entregar: (evaluacionId, contenido) => api.post('/estudiante/entregas', { evaluacionId, contenido }).then(r => r.data),
   misEntregas: () => api.get('/estudiante/entregas').then(r => r.data),
+  obtenerRendimiento: () => api.get('/estudiante/rendimiento').then(r => r.data),
 }

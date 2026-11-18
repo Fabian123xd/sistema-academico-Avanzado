@@ -32,4 +32,7 @@ export default {
   matricular: (estudianteId, cursoId) => api.post('/admin/matriculas', { estudianteId, cursoId }).then(r => r.data),
   matriculasDeCurso: (cursoId) => api.get(`/admin/cursos/${cursoId}/matriculas`).then(r => r.data),
   validarCruceHorario: (estudianteId, cursoId) => api.get(`/admin/matriculas/validar-cruce?estudianteId=${estudianteId}&cursoId=${cursoId}`).then(r => r.data),
+
+  // Cuadro de Merito / Ranking
+  obtenerCuadroMerito: (carreraId) => api.get(`/admin/cuadro-merito${carreraId ? `?carreraId=${carreraId}` : ''}`).then(r => r.data),
 }
