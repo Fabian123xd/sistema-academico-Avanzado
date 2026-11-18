@@ -9,6 +9,7 @@ export default function AdminMatriculas() {
   const [cursoId, setCursoId] = useState('')
   const [matriculas, setMatriculas] = useState([])
   const [vacantes, setVacantes] = useState(null)
+  const [cruceAlerta, setCruceAlerta] = useState(null)
   const [error, setError] = useState(null)
   const [mensaje, setMensaje] = useState(null)
 
@@ -29,6 +30,22 @@ export default function AdminMatriculas() {
       setVacantes(null)
     }
   }, [cursoId])
+
+  useEffect(() => {
+    if (estudianteId && cursoId) {
+      adminService.validarCruceHorario(estudianteId, cursoId)
+        .then(res => {
+          if (res.hayCruce) {
+            setCruceAlerta(res.mensaje)
+          } else {
+            setCruceAlerta(null)
+          }
+        })
+        .catch(() => setCruceAlerta(null))
+    } else {
+      setCruceAlerta(null)
+    }
+  }, [estudianteId, cursoId])
 
   const matricular = async (e) => {
     e.preventDefault()
@@ -76,9 +93,16 @@ export default function AdminMatriculas() {
               )}
             </Col>
             <Col md={2}>
-              <Button type="submit" className="w-100">Matricular</Button>
+              <Button type="submit" className="w-100" disabled={vacantes && vacantes.vacantesDisponibles <= 0}>
+                Matricular
+              </Button>
             </Col>
           </Row>
+          {cruceAlerta && (
+            <Alert variant="warning" className="mt-3 mb-0">
+              ⚠️ <strong>Advertencia de Horario:</strong> {cruceAlerta}
+            </Alert>
+          )}
         </Form>
       </Card>
 

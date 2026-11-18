@@ -123,4 +123,9 @@ public class AdminAcademicoController {
     public List<Matricula> matriculasDeCurso(@PathVariable Long id) {
         return academicoService.matriculasDeCurso(id);
     }
+
+    @GetMapping("/matriculas/validar-cruce")
+    public Map<String, Object> verificarCruceHorario(@RequestParam Long estudianteId, @RequestParam Long cursoId) {
+        return academicoService.verificarCruceHorario(estudianteId, cursoId);
+    }
 }

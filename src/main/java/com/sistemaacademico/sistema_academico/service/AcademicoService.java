@@ -195,11 +195,77 @@ public class AcademicoService {
         // Validar cumplimiento de prerrequisitos
         validarPrerrequisitos(estudiante.getId(), curso);
 
+        // Validar ausencia de cruce de horario con otros cursos del estudiante
+        validarCruceHorarios(estudiante.getId(), curso);
+
         Matricula matricula = new Matricula();
         matricula.setEstudiante(estudiante);
         matricula.setCurso(curso);
         matricula.setEstado(EstadoMatricula.INSCRITO);
         return matriculaRepository.save(matricula);
+    }
+
+    public Map<String, Object> verificarCruceHorario(Long usuarioEstudianteId, Long cursoId) {
+        Estudiante estudiante = estudianteRepository.findByUsuarioId(usuarioEstudianteId)
+                .orElseThrow(() -> new ApiException("Estudiante no encontrado", HttpStatus.NOT_FOUND));
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new ApiException("Curso no encontrado", HttpStatus.NOT_FOUND));
+
+        try {
+            validarCruceHorarios(estudiante.getId(), curso);
+            return Map.of("hayCruce", false, "mensaje", "Sin cruce de horarios");
+        } catch (ApiException e) {
+            return Map.of("hayCruce", true, "mensaje", e.getMessage());
+        }
+    }
+
+    private void validarCruceHorarios(Long estudianteId, Curso cursoNuevo) {
+        List<Horario> horariosNuevo = horarioRepository.findByCursoId(cursoNuevo.getId());
+        if (horariosNuevo == null || horariosNuevo.isEmpty()) {
+            return;
+        }
+
+        List<Matricula> matriculasActivas = matriculaRepository.findByEstudianteId(estudianteId).stream()
+                .filter(m -> m.getEstado() != EstadoMatricula.RETIRADO)
+                .filter(m -> {
+                    if (cursoNuevo.getPeriodo() == null || m.getCurso().getPeriodo() == null) {
+                        return true;
+                    }
+                    return m.getCurso().getPeriodo().getId().equals(cursoNuevo.getPeriodo().getId());
+                })
+                .toList();
+
+        if (matriculasActivas.isEmpty()) {
+            return;
+        }
+
+        List<Long> cursoIdsActivos = matriculasActivas.stream().map(m -> m.getCurso().getId()).toList();
+        List<Horario> horariosExistentes = horarioRepository.findByCursoIdIn(cursoIdsActivos);
+
+        for (Horario hn : horariosNuevo) {
+            for (Horario he : horariosExistentes) {
+                if (hn.getDiaSemana() != null && he.getDiaSemana() != null
+                        && hn.getDiaSemana().trim().equalsIgnoreCase(he.getDiaSemana().trim())) {
+
+                    if (hn.getHoraInicio() != null && hn.getHoraFin() != null
+                            && he.getHoraInicio() != null && he.getHoraFin() != null) {
+
+                        boolean seSolapan = hn.getHoraInicio().isBefore(he.getHoraFin())
+                                && he.getHoraInicio().isBefore(hn.getHoraFin());
+
+                        if (seSolapan) {
+                            throw new ApiException(
+                                    "Cruce de horario detectado el día " + hn.getDiaSemana().toUpperCase()
+                                            + " (" + hn.getHoraInicio() + " - " + hn.getHoraFin() + ")"
+                                            + " con el curso ya matriculado: '" + he.getCurso().getNombre()
+                                            + "' (" + he.getHoraInicio() + " - " + he.getHoraFin() + ")",
+                                    HttpStatus.CONFLICT
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public Map<String, Object> obtenerVacantes(Long cursoId) {

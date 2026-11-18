@@ -31,4 +31,5 @@ export default {
   // Matriculas
   matricular: (estudianteId, cursoId) => api.post('/admin/matriculas', { estudianteId, cursoId }).then(r => r.data),
   matriculasDeCurso: (cursoId) => api.get(`/admin/cursos/${cursoId}/matriculas`).then(r => r.data),
+  validarCruceHorario: (estudianteId, cursoId) => api.get(`/admin/matriculas/validar-cruce?estudianteId=${estudianteId}&cursoId=${cursoId}`).then(r => r.data),
 }
