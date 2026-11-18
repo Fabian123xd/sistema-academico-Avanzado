@@ -1,0 +1,72 @@
+name: CI - Integración Continua
+
+on:
+  push:
+    branches: [main, Marck-Avance]
+  pull_request:
+    branches: [main, Marck-Avance]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-backend:
+    name: Backend · Maven y pruebas
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: sistema_academico_ci
+          MYSQL_ROOT_PASSWORD: ci-local-only
+          MYSQL_ROOT_HOST: '%'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/sistema_academico_ci?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ci-local-only
+      JWT_SECRET: ci-only-signing-key-never-use-this-outside-ephemeral-tests-05873
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+      - name: Compilar, probar y empaquetar
+        run: bash mvnw --batch-mode --no-transfer-progress clean verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sistema-academico-backend
+          path: target/sistema-academico-*.jar
+          if-no-files-found: error
+
+  build-frontend:
+    name: Frontend · React y Vite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Compilar frontend
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sistema-academico-frontend
+          path: frontend/dist/
+          if-no-files-found: error
