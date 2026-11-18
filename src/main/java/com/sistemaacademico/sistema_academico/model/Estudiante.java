@@ -24,4 +24,8 @@ public class Estudiante {
     private LocalDate fechaNacimiento;
 
     private String telefono;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "carrera_id")
+    private Carrera carrera;
 }
