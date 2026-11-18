@@ -24,14 +24,36 @@ export default function DocenteCurso() {
   const [evalForm, setEvalForm] = useState({ titulo: '', descripcion: '', tipo: 'TAREA', fechaEntrega: '', puntajeMaximo: 20 })
   const [criterioForm, setCriterioForm] = useState({ codigo: '', nombre: '', porcentaje: '' })
   const [mostrarGestorCriterios, setMostrarGestorCriterios] = useState(false)
+  const [acta, setActa] = useState(null)
+  const [cerrandoActa, setCerrandoActa] = useState(false)
 
   const cargarTodo = () => {
     docenteService.matriculasDeCurso(cursoId).then(setMatriculas)
     docenteService.notasDeCurso(cursoId).then(setNotas)
     docenteService.listarCriterios(cursoId).then(setCriterios)
+    docenteService.obtenerActa(cursoId).then(setActa).catch(() => setActa(null))
     docenteService.asistenciaDeCurso(cursoId).then(setAsistencias)
     docenteService.materialesDeCurso(cursoId).then(setMateriales)
     docenteService.evaluacionesDeCurso(cursoId).then(setEvaluaciones)
+  }
+
+  const cerrarActaOficial = async () => {
+    if (!window.confirm('¿Estás seguro de calcular los promedios finales y cerrar el Acta Oficial? Esta acción actualizará la condición académica (Aprobado/Desaprobado) de los estudiantes.')) {
+      return
+    }
+    setCerrandoActa(true)
+    setError(null)
+    setMensaje(null)
+    try {
+      const res = await docenteService.cerrarActa(cursoId)
+      setActa(res)
+      setMensaje('¡Acta de calificaciones calculada y cerrada oficialmente!')
+      cargarTodo()
+    } catch (err) {
+      setError(err?.response?.data?.mensaje || 'Error al cerrar el acta.')
+    } finally {
+      setCerrandoActa(false)
+    }
   }
 
   useEffect(() => { cargarTodo() }, [cursoId])
@@ -264,6 +286,101 @@ export default function DocenteCurso() {
                   </tr>
                 ))}
                 {notas.length === 0 && <tr><td colSpan={5} className="text-center small-muted">Sin notas registradas</td></tr>}
+              </tbody>
+            </Table>
+          </Card>
+        </Tab>
+
+        <Tab eventKey="acta" title="Acta Oficial y Promedios">
+          <Card className="card-custom p-3 mb-3">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <h5 className="mb-1">Acta de Calificaciones Ponderadas</h5>
+                <div className="small-muted">
+                  Cálculo automático de nota final según las ponderaciones del curso (Aprobatorio ≥ 10.5).
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                {acta?.actaCerrada ? (
+                  <Badge bg="success" className="p-2">
+                    ✓ Acta Oficial Cerrada {acta.fechaCierre ? `(${new Date(acta.fechaCierre).toLocaleDateString()})` : ''}
+                  </Badge>
+                ) : (
+                  <Badge bg="warning" text="dark" className="p-2">
+                    Acta en Borrador / Abierta
+                  </Badge>
+                )}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={cerrandoActa || !acta?.filas?.length}
+                  onClick={cerrarActaOficial}
+                >
+                  {cerrandoActa ? 'Procesando...' : '⚡ Calcular Promedios y Cerrar Acta'}
+                </Button>
+              </div>
+            </div>
+
+            <Table striped hover responsive className="mt-3 align-middle">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Estudiante</th>
+                  {acta?.criterios?.map(c => (
+                    <th key={c.id} className="text-center">
+                      {c.codigo} <br />
+                      <small className="text-muted fw-normal">({c.porcentaje}%)</small>
+                    </th>
+                  ))}
+                  <th className="text-center">Promedio Final</th>
+                  <th className="text-center">Condición</th>
+                </tr>
+              </thead>
+              <tbody>
+                {acta?.filas?.map(f => (
+                  <tr key={f.matriculaId}>
+                    <td><strong>{f.estudianteCodigo}</strong></td>
+                    <td>{f.estudianteNombre}</td>
+                    {acta.criterios.map(c => {
+                      const notaCrit = f.notasPorCriterio ? f.notasPorCriterio[c.codigo] : null
+                      return (
+                        <td key={c.id} className="text-center">
+                          {notaCrit != null ? (
+                            <span className={notaCrit >= 10.5 ? 'text-success fw-bold' : 'text-danger fw-bold'}>
+                              {notaCrit}
+                            </span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                    <td className="text-center">
+                      <strong className={`fs-6 ${(f.promedioFinal ?? f.promedioCalculado) >= 10.5 ? 'text-success' : 'text-danger'}`}>
+                        {f.promedioFinal ?? f.promedioCalculado ?? '0.0'}
+                      </strong>
+                    </td>
+                    <td className="text-center">
+                      <Badge
+                        bg={
+                          f.estado === 'APROBADO' ? 'success'
+                          : f.estado === 'DESAPROBADO' ? 'danger'
+                          : f.estado === 'COMPLETADO' ? 'primary'
+                          : 'secondary'
+                        }
+                      >
+                        {f.estado}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+                {(!acta?.filas || acta.filas.length === 0) && (
+                  <tr>
+                    <td colSpan={4 + (acta?.criterios?.length || 0)} className="text-center small-muted py-3">
+                      No hay estudiantes matriculados en este curso.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </Table>
           </Card>

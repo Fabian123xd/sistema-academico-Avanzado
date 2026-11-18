@@ -294,7 +294,8 @@ public class AcademicoService {
         List<Matricula> matriculasEstudiante = matriculaRepository.findByEstudianteId(estudianteId);
         for (Curso prereq : curso.getPrerrequisitos()) {
             boolean aprobado = matriculasEstudiante.stream()
-                    .anyMatch(m -> m.getCurso().getId().equals(prereq.getId()) && m.getEstado() == EstadoMatricula.COMPLETADO);
+                    .anyMatch(m -> m.getCurso().getId().equals(prereq.getId()) &&
+                            (m.getEstado() == EstadoMatricula.APROBADO || m.getEstado() == EstadoMatricula.COMPLETADO));
 
             if (!aprobado) {
                 throw new ApiException(

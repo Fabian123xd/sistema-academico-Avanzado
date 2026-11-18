@@ -11,6 +11,8 @@ export default {
 
   registrarNota: (data) => api.post('/docente/notas', data).then(r => r.data),
   notasDeCurso: (cursoId) => api.get(`/docente/cursos/${cursoId}/notas`).then(r => r.data),
+  obtenerActa: (cursoId) => api.get(`/docente/cursos/${cursoId}/acta`).then(r => r.data),
+  cerrarActa: (cursoId) => api.post(`/docente/cursos/${cursoId}/cerrar-acta`).then(r => r.data),
 
   registrarAsistencia: (data) => api.post('/docente/asistencia', data).then(r => r.data),
   asistenciaDeCurso: (cursoId) => api.get(`/docente/cursos/${cursoId}/asistencia`).then(r => r.data),
