@@ -217,5 +217,6 @@ npm run build
 Proyecto de Gestión Académica desarrollado con fines académicos e institucionales.  
 Todos los derechos reservados © 2026.
 
+## Prueba de integracion continua
 
-hola a todos por entrar
+Modificaion realizada mediante la demostracion de pipeline
