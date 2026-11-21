@@ -216,3 +216,6 @@ npm run build
 
 Proyecto de Gestión Académica desarrollado con fines académicos e institucionales.  
 Todos los derechos reservados © 2026.
+
+
+hola a todos por entrar
